@@ -94,9 +94,9 @@ def visualize_stock_data(df: pd.DataFrame, columns: list = ["Close"], view: str 
     buy_signals = df[df["Signal"] == 1]
     sell_signals = df[df["Signal"] == -1]
     fig.add_trace(go.Scatter(x=buy_signals["Date"], y=buy_signals["Close"], mode='markers',
-                             marker=dict(color='green', size=8), name='Buy Signal'))
+                             marker=dict(color='green', size=4), name='Buy Signal'))
     fig.add_trace(go.Scatter(x=sell_signals["Date"], y=sell_signals["Close"], mode='markers',
-                             marker=dict(color='red', size=8), name='Sell Signal'))
+                             marker=dict(color='red', size=4), name='Sell Signal'))
 
     fig.update_layout(
         title="📈 Pro-Level Stock Visualization",

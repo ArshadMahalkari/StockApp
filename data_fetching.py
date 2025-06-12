@@ -1,11 +1,12 @@
 import yfinance as yf
 import pandas as pd
 import requests
+import streamlit as st
 import logging
 from io import StringIO
 
 logger = logging.getLogger(__name__)
-
+@st.cache_data(ttl=3600)
 def fetch_stock_data(ticker, start_date, end_date, alpha_vantage_api_key=None):
     """
     Fetch stock data using yfinance first; fallback to Alpha Vantage if needed.

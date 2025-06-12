@@ -1,5 +1,6 @@
 import pandas as pd
 import logging
+import streamlit as st
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -7,7 +8,7 @@ import pandas as pd
 import logging
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
+@st.cache_data
 def process_stock_data(df: pd.DataFrame, days_limit: int = None) -> pd.Series:
     """
     Clean, validate, and flatten stock data into a single-row Series with clearly ordered columns.

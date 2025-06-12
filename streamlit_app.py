@@ -1,5 +1,4 @@
 # streamlit_app.py
-
 import streamlit as st
 import os
 import io
@@ -22,6 +21,10 @@ import os
 from lstm_prediction import main  # Import the function from your script
 import streamlit as st
 import plotly.graph_objects as go
+from compare_stocks import compare_two_stocks
+from report_dashboard import show_live_dashboard
+from compare_stocks import compare_two_stocks
+from watchlist import load_watchlist, save_to_watchlist, remove_from_watchlist
 from streamlit_option_menu import option_menu
 
 # 📁 Where to save and load CSVs
@@ -81,12 +84,14 @@ with st.sidebar:
             "📈 Advanced Analysis",
             "📊 Visualize Data",
             "🤖 LSTM Prediction",
+            "📊 Compare Stocks",
+            "📊 Prediction Dashboard",
             "📝 Feedback",
             "🚀 About"
         ],
         icons=[
             "house", "cloud-upload", "tools",
-            "bar-chart", "graph-up", "pie-chart",
+            "bar-chart", "graph-up", "pie-chart","columns-gap",  # Bootstrap icon for comparison
             "robot", "chat-dots", "info-circle"
         ],
         default_index=0,
@@ -142,20 +147,38 @@ if page == "🏠 Home":
 
 # 📥 DATA FETCHING
 elif page == "📥 Fetch / Upload Data":
+    from watchlist import load_watchlist, save_to_watchlist, remove_from_watchlist
     st.markdown("## 📥 Fetch Stock Data or Upload CSV")
     st.markdown("Easily fetch real-time stock market data or upload your own CSV for custom analysis.")
 
     with st.container():
         st.markdown("### 🔎 Enter Stock Details")
 
-        # Input fields with columns
+        # 📌 Watchlist input section
+        watchlist = load_watchlist()
+        use_watchlist = st.radio(
+            "🎯 Choose Ticker Entry Method",
+            ["Manual Entry", "Choose from Watchlist"],
+            horizontal=True
+        )
+
         col1, col2 = st.columns([1.5, 1])
-        with col1:
-            ticker = st.text_input("🎯 Stock Symbol", value="AAPL", help="e.g. AAPL for Apple Inc.")
+
+        if use_watchlist == "Manual Entry":
+            with col1:
+                ticker = st.text_input("🎯 Stock Symbol", value="AAPL", help="e.g. AAPL for Apple Inc.")
+        else:
+            with col1:
+                if watchlist:
+                    ticker = st.selectbox("📁 Select from Watchlist", options=watchlist)
+                else:
+                    st.warning("⚠️ Watchlist is empty. Switching to manual entry.")
+                    ticker = st.text_input("🎯 Stock Symbol", value="AAPL")
+
         with col2:
             interval = st.selectbox("🕒 Interval", ["1d", "1wk", "1mo"], help="Select data frequency")
 
-        # Date selection
+        # 📅 Date selection
         st.markdown("#### 📆 Select Date Range")
         date1, date2 = st.columns(2)
         from datetime import datetime, timedelta
@@ -164,12 +187,12 @@ elif page == "📥 Fetch / Upload Data":
 
         st.markdown("---")
 
-        # 🗂️ Upload CSV section
+        # 📂 Upload CSV section
         st.markdown("### 📂 Or Upload Your Own CSV")
         uploaded_file = st.file_uploader("Drag and drop or browse a CSV file", type=["csv"])
 
-        # ✨ Input Validation
-        if not ticker.isalpha() or len(ticker) < 1:
+        # ⚠️ Input validation
+        if not ticker or len(ticker.strip()) < 1:
             st.warning("⚠️ Please enter a valid stock ticker symbol.")
             st.stop()
 
@@ -189,7 +212,7 @@ elif page == "📥 Fetch / Upload Data":
             st.session_state.csv_path = saved_path
             st.session_state.data = df
 
-        # 📡 Fetch data button
+        # 📡 Fetch from Yahoo button
         elif st.button("🔎 Fetch Data from Yahoo Finance"):
             if start_date == end_date:
                 end_date += timedelta(days=1)
@@ -216,10 +239,25 @@ elif page == "📥 Fetch / Upload Data":
             except Exception as e:
                 st.error(f"❌ Failed to fetch data: {e}")
 
+        # ⭐ Watchlist buttons
+        st.markdown("### ⭐ Watchlist Actions")
+        colA, colB = st.columns(2)
+        with colA:
+            if st.button("⭐ Add to Watchlist"):
+                if save_to_watchlist(ticker):
+                    st.success(f"{ticker} added to watchlist ✅")
+                else:
+                    st.info(f"{ticker} is already in your watchlist")
+
+        with colB:
+            if st.button("🗑️ Remove from Watchlist"):
+                if remove_from_watchlist(ticker):
+                    st.warning(f"{ticker} removed from watchlist")
+                else:
+                    st.info(f"{ticker} was not in your watchlist")
+
     st.markdown("---")
     st.caption("📌 Tip: Use short ticker names like `TSLA`, `GOOGL`, `MSFT` to get best results.")
-
-
 
 # 🧹 DATA PROCESSING
 elif page == "🧹 Data Processing":
@@ -772,3 +810,10 @@ if page == "📝 Feedback":
                 st.warning("⚠️ Please complete all fields before submitting.")
 
     st.markdown("</div>", unsafe_allow_html=True)
+    
+elif page == "📊 Compare Stocks":
+    compare_two_stocks()
+
+elif page == "📊 Prediction Dashboard":
+    
+    show_live_dashboard()
